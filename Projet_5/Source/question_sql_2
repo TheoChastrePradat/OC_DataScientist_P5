@@ -1,0 +1,14 @@
+SELECT
+    oi.seller_id,
+    ROUND(SUM(oi.price), 2) AS total_revenue
+FROM
+    order_items oi
+JOIN orders o ON oi.order_id = o.order_id
+WHERE
+    o.order_status = 'delivered'
+GROUP BY
+    oi.seller_id
+HAVING
+    total_revenue > 100000
+ORDER BY
+    total_revenue DESC;

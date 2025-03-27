@@ -1,0 +1,90 @@
+-------------------QUESTION 1-------------------
+
+SELECT
+    order_id,
+    customer_id,
+    order_status,
+    order_purchase_timestamp,
+    order_delivered_customer_date,
+    order_estimated_delivery_date,
+    ROUND(JULIANDAY(order_delivered_customer_date) - JULIANDAY(order_estimated_delivery_date)) AS delay_days
+FROM
+    orders
+WHERE
+    order_status != 'canceled'
+    AND order_delivered_customer_date IS NOT NULL
+    AND (JULIANDAY(order_delivered_customer_date) - JULIANDAY(order_estimated_delivery_date)) >= 3
+    AND DATE(order_purchase_timestamp) >= DATE('2018-10-17', '-3 months')
+ORDER BY
+    delay_days DESC
+
+-------------------QUESTION 2-------------------
+
+SELECT
+    oi.seller_id,
+    ROUND(SUM(oi.price), 2) AS total_revenue
+FROM
+    order_items oi
+JOIN orders o ON oi.order_id = o.order_id
+WHERE
+    o.order_status = 'delivered'
+GROUP BY
+    oi.seller_id
+HAVING
+    total_revenue > 100000
+ORDER BY
+    total_revenue DESC;
+
+-------------------QUESTION 3-------------------
+
+SELECT
+    f.seller_id,
+    f.first_sale_date,
+    sa.total_products_sold
+FROM
+    (
+        SELECT
+            oi.seller_id,
+            MIN(o.order_purchase_timestamp) AS first_sale_date
+        FROM
+            order_items oi
+        JOIN orders o ON oi.order_id = o.order_id
+        GROUP BY
+            oi.seller_id
+    ) AS f
+JOIN
+    (
+        SELECT
+            seller_id,
+            COUNT(*) AS total_products_sold
+        FROM
+            order_items
+        GROUP BY
+            seller_id
+    ) AS sa
+ON f.seller_id = sa.seller_id
+WHERE
+    DATE(f.first_sale_date) >= DATE('2018-10-17', '-3 months')
+    AND sa.total_products_sold > 30
+ORDER BY
+    sa.total_products_sold DESC;
+
+-------------------QUESTION 4-------------------
+
+SELECT
+    c.customer_zip_code_prefix,
+    COUNT(odr.review_score) AS nb_reviews,
+    ROUND(AVG(odr.review_score), 2) AS avg_score
+FROM
+    order_reviews odr
+JOIN orders o ON odr.order_id = o.order_id
+JOIN customers c ON o.customer_id = c.customer_id
+WHERE
+    DATE(odr.review_creation_date) >= DATE('2018-10-17', '-12 months')
+GROUP BY
+    c.customer_zip_code_prefix
+HAVING
+    nb_reviews > 30
+ORDER BY
+    avg_score ASC
+LIMIT 5;

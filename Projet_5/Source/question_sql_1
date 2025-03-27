@@ -1,0 +1,17 @@
+SELECT
+    order_id,
+    customer_id,
+    order_status,
+    order_purchase_timestamp,
+    order_delivered_customer_date,
+    order_estimated_delivery_date,
+    ROUND(JULIANDAY(order_delivered_customer_date) - JULIANDAY(order_estimated_delivery_date)) AS delay_days
+FROM
+    orders
+WHERE
+    order_status != 'canceled'
+    AND order_delivered_customer_date IS NOT NULL
+    AND (JULIANDAY(order_delivered_customer_date) - JULIANDAY(order_estimated_delivery_date)) >= 3
+    AND DATE(order_purchase_timestamp) >= DATE('2018-10-17', '-3 months')
+ORDER BY
+    delay_days DESC

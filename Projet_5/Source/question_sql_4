@@ -1,0 +1,17 @@
+SELECT
+    c.customer_zip_code_prefix,
+    COUNT(odr.review_score) AS nb_reviews,
+    ROUND(AVG(odr.review_score), 2) AS avg_score
+FROM
+    order_reviews odr
+JOIN orders o ON odr.order_id = o.order_id
+JOIN customers c ON o.customer_id = c.customer_id
+WHERE
+    DATE(odr.review_creation_date) >= DATE('2018-10-17', '-12 months')
+GROUP BY
+    c.customer_zip_code_prefix
+HAVING
+    nb_reviews > 30
+ORDER BY
+    avg_score ASC
+LIMIT 5;

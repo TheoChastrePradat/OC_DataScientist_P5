@@ -1,0 +1,31 @@
+SELECT
+    f.seller_id,
+    f.first_sale_date,
+    sa.total_products_sold
+FROM
+    (
+        SELECT
+            oi.seller_id,
+            MIN(o.order_purchase_timestamp) AS first_sale_date
+        FROM
+            order_items oi
+        JOIN orders o ON oi.order_id = o.order_id
+        GROUP BY
+            oi.seller_id
+    ) AS f
+JOIN
+    (
+        SELECT
+            seller_id,
+            COUNT(*) AS total_products_sold
+        FROM
+            order_items
+        GROUP BY
+            seller_id
+    ) AS sa
+ON f.seller_id = sa.seller_id
+WHERE
+    DATE(f.first_sale_date) >= DATE('2018-10-17', '-3 months')
+    AND sa.total_products_sold > 30
+ORDER BY
+    sa.total_products_sold DESC;
